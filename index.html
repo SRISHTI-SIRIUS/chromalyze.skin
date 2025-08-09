@@ -916,3 +916,401 @@
     </script>
 </body>
 </html>
+import React from 'react';
+
+const ArchitectureDiagram = () => {
+  return (
+    <div className="w-full max-w-6xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+          CHROMALYZE Architecture
+        </h1>
+        <p className="text-gray-600 text-lg">Skin Tone Color Analyzer System Design</p>
+      </div>
+
+      {/* Frontend Layer */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="w-4 h-4 bg-blue-500 rounded mr-3"></div>
+          Frontend Layer
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
+            <h3 className="font-bold text-blue-700 mb-2">📱 User Interface</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Drag & drop image upload</li>
+              <li>• Camera integration</li>
+              <li>• Real-time preview</li>
+              <li>• Results visualization</li>
+              <li>• Color palette display</li>
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
+            <h3 className="font-bold text-blue-700 mb-2">🎨 Styling & UX</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• CSS3 with gradients</li>
+              <li>• Responsive design</li>
+              <li>• Smooth animations</li>
+              <li>• Interactive elements</li>
+              <li>• Accessibility features</li>
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
+            <h3 className="font-bold text-blue-700 mb-2">⚡ Client-Side Logic</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Image preprocessing</li>
+              <li>• Camera API handling</li>
+              <li>• File validation</li>
+              <li>• State management</li>
+              <li>• Error handling</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* AI/ML Layer */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="w-4 h-4 bg-green-500 rounded mr-3"></div>
+          AI/ML Layer
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
+            <h3 className="font-bold text-green-700 mb-2">🧠 TensorFlow.js Model</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Pre-trained CNN model</li>
+              <li>• Client-side inference</li>
+              <li>• 224x224 input processing</li>
+              <li>• 3-class classification</li>
+              <li>• Confidence scoring</li>
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
+            <h3 className="font-bold text-green-700 mb-2">🔄 Image Processing</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Canvas API integration</li>
+              <li>• Image resizing/cropping</li>
+              <li>• Tensor conversion</li>
+              <li>• Normalization (0-1)</li>
+              <li>• Memory management</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Data Layer */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="w-4 h-4 bg-purple-500 rounded mr-3"></div>
+          Data & Business Logic
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-500">
+            <h3 className="font-bold text-purple-700 mb-2">📊 Color Recommendations</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Static recommendation data</li>
+              <li>• Color palette mappings</li>
+              <li>• Clothing suggestions</li>
+              <li>• Jewelry recommendations</li>
+              <li>• Hex color definitions</li>
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-500">
+            <h3 className="font-bold text-purple-700 mb-2">🎯 Classification Logic</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Light/Medium/Dark tones</li>
+              <li>• Confidence thresholding</li>
+              <li>• Result interpretation</li>
+              <li>• Description mapping</li>
+              <li>• Error fallbacks</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* System Architecture Flow */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="w-4 h-4 bg-orange-500 rounded mr-3"></div>
+          Data Flow Architecture
+        </h2>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl">📷</span>
+              </div>
+              <p className="text-sm font-semibold">Image Input</p>
+              <p className="text-xs text-gray-600">Upload/Camera</p>
+            </div>
+            <div className="text-2xl text-gray-400">→</div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl">⚙</span>
+              </div>
+              <p className="text-sm font-semibold">Preprocessing</p>
+              <p className="text-xs text-gray-600">Resize/Normalize</p>
+            </div>
+            <div className="text-2xl text-gray-400">→</div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl">🧠</span>
+              </div>
+              <p className="text-sm font-semibold">AI Inference</p>
+              <p className="text-xs text-gray-600">TensorFlow.js</p>
+            </div>
+            <div className="text-2xl text-gray-400">→</div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl">🎨</span>
+              </div>
+              <p className="text-sm font-semibold">Results</p>
+              <p className="text-xs text-gray-600">Colors/Recommendations</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Technology Stack */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="w-4 h-4 bg-red-500 rounded mr-3"></div>
+          Technology Stack
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-md text-center">
+            <div className="text-3xl mb-2">🌐</div>
+            <h3 className="font-bold text-gray-700 mb-2">Frontend</h3>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>HTML5</li>
+              <li>CSS3</li>
+              <li>JavaScript ES6+</li>
+              <li>Canvas API</li>
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md text-center">
+            <div className="text-3xl mb-2">🤖</div>
+            <h3 className="font-bold text-gray-700 mb-2">AI/ML</h3>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>TensorFlow.js</li>
+              <li>CNN Model</li>
+              <li>Image Classification</li>
+              <li>Client-side ML</li>
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md text-center">
+            <div className="text-3xl mb-2">📱</div>
+            <h3 className="font-bold text-gray-700 mb-2">APIs</h3>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>MediaDevices</li>
+              <li>FileReader</li>
+              <li>Canvas 2D</li>
+              <li>Drag & Drop</li>
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md text-center">
+            <div className="text-3xl mb-2">🚀</div>
+            <h3 className="font-bold text-gray-700 mb-2">Deployment</h3>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>Static Hosting</li>
+              <li>CDN (TF.js)</li>
+              <li>Progressive Web</li>
+              <li>Mobile Ready</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Missing Implementation Issues */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-red-600 mb-4 flex items-center">
+          <div className="w-4 h-4 bg-red-500 rounded mr-3"></div>
+          🚨 Current Implementation Gaps
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-red-50 p-4 rounded-lg shadow-md border-l-4 border-red-500">
+            <h3 className="font-bold text-red-700 mb-2">❌ Missing Functions</h3>
+            <ul className="text-sm text-red-700 space-y-1">
+              <li>• updateUploadSectionAfterImage() not defined</li>
+              <li>• Camera modal CSS missing</li>
+              <li>• Model files (model.json) not provided</li>
+              <li>• Error boundary handling incomplete</li>
+              <li>• No fallback for unsupported browsers</li>
+            </ul>
+          </div>
+          <div className="bg-yellow-50 p-4 rounded-lg shadow-md border-l-4 border-yellow-500">
+            <h3 className="font-bold text-yellow-700 mb-2">⚠ Production Concerns</h3>
+            <ul className="text-sm text-yellow-700 space-y-1">
+              <li>• No model version control</li>
+              <li>• Missing offline capability</li>
+              <li>• No user analytics/feedback</li>
+              <li>• Limited error reporting</li>
+              <li>• No A/B testing framework</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Deployment Architecture */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="w-4 h-4 bg-cyan-500 rounded mr-3"></div>
+          Production Deployment Structure
+        </h2>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span className="text-3xl">🌐</span>
+              </div>
+              <h3 className="font-bold text-gray-700 mb-2">Static Assets</h3>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li>index.html</li>
+                <li>styles.css</li>
+                <li>app.js</li>
+                <li>manifest.json (PWA)</li>
+              </ul>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span className="text-3xl">🤖</span>
+              </div>
+              <h3 className="font-bold text-gray-700 mb-2">ML Models</h3>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li>model.json</li>
+                <li>model weights (.bin)</li>
+                <li>metadata.json</li>
+                <li>Version control</li>
+              </ul>
+            </div>
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span className="text-3xl">📊</span>
+              </div>
+              <h3 className="font-bold text-gray-700 mb-2">Analytics</h3>
+              <ul className="text-xs text-gray-600 space-y-1">
+                <li>Usage tracking</li>
+                <li>Error monitoring</li>
+                <li>Performance metrics</li>
+                <li>User feedback</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recommended Hosting Options */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="w-4 h-4 bg-blue-500 rounded mr-3"></div>
+          Recommended Hosting Solutions
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
+            <h3 className="font-bold text-blue-700 mb-2">🚀 Vercel (Recommended)</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Zero-config deployment</li>
+              <li>• Automatic HTTPS</li>
+              <li>• Global CDN</li>
+              <li>• Perfect for static apps</li>
+              <li>• Free tier available</li>
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-orange-500">
+            <h3 className="font-bold text-orange-700 mb-2">⚡ Netlify</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Drag & drop deployment</li>
+              <li>• Form handling</li>
+              <li>• Analytics included</li>
+              <li>• Branch previews</li>
+              <li>• Edge functions</li>
+            </ul>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
+            <h3 className="font-bold text-green-700 mb-2">☁ GitHub Pages</h3>
+            <ul className="text-sm text-gray-700 space-y-1">
+              <li>• Free hosting</li>
+              <li>• Direct from repository</li>
+              <li>• Custom domains</li>
+              <li>• CI/CD integration</li>
+              <li>• Version control</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Security & Performance */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+            <div className="w-4 h-4 bg-yellow-500 rounded mr-3"></div>
+            Security Features
+          </h2>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <ul className="text-sm text-gray-700 space-y-2">
+              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Client-side processing (no data upload)</li>
+              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>No server-side storage</li>
+              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Camera permission handling</li>
+              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>File type validation</li>
+              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Memory cleanup</li>
+              <li className="flex items-center"><span className="text-red-500 mr-2">⚠</span>CSP headers needed</li>
+              <li className="flex items-center"><span className="text-red-500 mr-2">⚠</span>HTTPS enforcement</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+            <div className="w-4 h-4 bg-indigo-500 rounded mr-3"></div>
+            Performance Optimizations
+          </h2>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <ul className="text-sm text-gray-700 space-y-2">
+              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Lazy model loading</li>
+              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Image resizing optimization</li>
+              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Tensor memory management</li>
+              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Responsive design</li>
+              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Progressive enhancement</li>
+              <li className="flex items-center"><span className="text-yellow-500 mr-2">⚠</span>Model compression needed</li>
+              <li className="flex items-center"><span className="text-yellow-500 mr-2">⚠</span>Service worker for caching</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Next Steps for Production */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="w-4 h-4 bg-green-500 rounded mr-3"></div>
+          Immediate Action Items
+        </h2>
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-bold text-green-700 mb-3">🔧 Fix Implementation</h3>
+              <ul className="text-sm text-gray-700 space-y-2">
+                <li className="flex items-center"><span className="text-red-500 mr-2">1.</span>Add missing updateUploadSectionAfterImage function</li>
+                <li className="flex items-center"><span className="text-red-500 mr-2">2.</span>Complete camera modal CSS styling</li>
+                <li className="flex items-center"><span className="text-red-500 mr-2">3.</span>Create/upload ML model files</li>
+                <li className="flex items-center"><span className="text-red-500 mr-2">4.</span>Add comprehensive error handling</li>
+                <li className="flex items-center"><span className="text-red-500 mr-2">5.</span>Implement fallbacks for old browsers</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold text-blue-700 mb-3">🚀 Production Setup</h3>
+              <ul className="text-sm text-gray-700 space-y-2">
+                <li className="flex items-center"><span className="text-blue-500 mr-2">1.</span>Set up CI/CD pipeline</li>
+                <li className="flex items-center"><span className="text-blue-500 mr-2">2.</span>Add analytics & monitoring</li>
+                <li className="flex items-center"><span className="text-blue-500 mr-2">3.</span>Configure CDN for models</li>
+                <li className="flex items-center"><span className="text-blue-500 mr-2">4.</span>Implement PWA features</li>
+                <li className="flex items-center"><span className="text-blue-500 mr-2">5.</span>Set up domain & SSL</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ArchitectureDiagram;
