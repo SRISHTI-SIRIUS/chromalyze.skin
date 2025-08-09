@@ -751,6 +751,9 @@
                 
                 currentImage = previewImg;
                 
+                // Update upload section to show "change image" state
+                updateUploadSectionAfterImage();
+                
                 // Hide results from previous analysis
                 document.getElementById('results').classList.remove('show');
             };
