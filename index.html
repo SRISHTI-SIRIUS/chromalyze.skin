@@ -403,12 +403,12 @@
         </div>
 
         <div class="upload-section" id="uploadSection">
-            <div class="upload-icon">📷</div>
-            <div class="upload-text">Get Your Photo</div>
-            <div class="upload-subtext">Choose from your device or take a photo with your camera</div>
+            <div class="upload-icon" id="uploadIcon">📷</div>
+            <div class="upload-text" id="uploadText">Get Your Photo</div>
+            <div class="upload-subtext" id="uploadSubtext">Choose from your device or take a photo with your camera</div>
             <input type="file" id="imageInput" class="file-input" accept="image/*">
             <div class="upload-options">
-                <button class="btn btn-primary" onclick="document.getElementById('imageInput').click()">
+                <button class="btn btn-primary" id="chooseBtn" onclick="document.getElementById('imageInput').click()">
                     📁 Choose Image
                 </button>
                 <button class="btn btn-secondary" id="cameraBtn">
@@ -599,6 +599,14 @@
             const previewImg = document.getElementById('previewImg');
             const analyzeBtn = document.getElementById('analyzeBtn');
             const cameraBtn = document.getElementById('cameraBtn');
+            const chooseBtn = document.getElementById('chooseBtn');
+
+            // Make sure the choose button works properly
+            chooseBtn.addEventListener('click', () => {
+                if (isModelLoaded) {
+                    imageInput.click();
+                }
+            });
             const cameraModal = document.getElementById('cameraModal');
             const closeCamera = document.getElementById('closeCamera');
             const switchCamera = document.getElementById('switchCamera');
