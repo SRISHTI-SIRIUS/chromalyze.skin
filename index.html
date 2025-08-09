@@ -1,918 +1,110 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHROMALYZE - Skin Tone Color Analyzer</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.20.0/tf.min.js"></script>
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>CHROMALYZE - Skin Tone Analyzer</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            max-width: 900px;
-            width: 100%;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .logo {
-            font-size: 2.5em;
-            font-weight: bold;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-        }
-
-        .tagline {
-            color: #666;
-            font-size: 1.1em;
-            margin-bottom: 20px;
-        }
-
-        .upload-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 30px;
-            border: 3px dashed #667eea;
-            border-radius: 20px;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-            transition: all 0.3s ease;
-        }
-
-        .upload-section:hover {
-            border-color: #764ba2;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            transform: translateY(-2px);
-        }
-
-        .upload-section.dragover {
-            border-color: #764ba2;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-            transform: scale(1.02);
-        }
-
-        .upload-icon {
-            font-size: 4em;
-            color: #667eea;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .upload-section:hover .upload-icon {
-            transform: scale(1.1);
-            color: #764ba2;
-        }
-
-        .upload-text {
-            font-size: 1.2em;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .upload-subtext {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 20px;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #f8f9fa;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .btn-secondary:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .image-preview {
-            display: none;
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .preview-img {
-            max-width: 400px;
-            max-height: 300px;
-            border-radius: 15px;
-            border: 3px solid #667eea;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .analyze-section {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .results {
-            display: none;
-            margin-top: 30px;
-            padding: 25px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            border: 1px solid #dee2e6;
-        }
-
-        .results.show {
-            display: block;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .result-section {
-            margin-bottom: 25px;
-        }
-
-        .result-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .skin-tone-result {
-            font-size: 1.2em;
-            padding: 20px;
-            background: white;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-            color: #333;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .color-recommendations {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .recommendation-card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .recommendation-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card-title {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-
-        .color-palette {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .color-item {
-            text-align: center;
-            transition: transform 0.2s ease;
-        }
-
-        .color-item:hover {
-            transform: scale(1.1);
-        }
-
-        .color-swatch {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            border: 3px solid #fff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .color-swatch:hover {
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-        }
-
-        .color-name {
-            font-size: 12px;
-            color: #666;
-            margin-top: 8px;
-            font-weight: 500;
-        }
-
-        .status {
-            text-align: center;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 10px;
-            font-weight: 500;
-        }
-
-        .status.info {
-            background: linear-gradient(135deg, #cce7ff, #b3d9ff);
-            color: #0066cc;
-            border: 1px solid #99d6ff;
-        }
-
-        .status.success {
-            background: linear-gradient(135deg, #d4edda, #c3e6cb);
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.error {
-            background: linear-gradient(135deg, #f8d7da, #f1b0b7);
-            color: #721c24;
-            border: 1px solid #f1b0b7;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .tips {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
-        }
-
-        .tips-title {
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .tips-list {
-            color: #555;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-            @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-            
-            .logo {
-                font-size: 2em;
-            }
-            
-            .preview-img {
-                max-width: 100%;
-                max-height: 250px;
-            }
-            
-            .color-recommendations {
-                grid-template-columns: 1fr;
-            }
-            
-            .color-palette {
-                justify-content: center;
-            }
-
-            .upload-options {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .upload-options .btn {
-                width: 200px;
-            }
-
-            .modal-content {
-                width: 95%;
-                margin: 5% auto;
-                padding: 15px;
-            }
-
-            .camera-controls {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .camera-controls .btn {
-                width: 180px;
-            }
-        }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      .webcam-placeholder {
+        color: #888;
+        padding: 20px;
+        text-align: center;
+      }
+      .camera-controls {
+        margin: 15px 0;
+        display: flex;
+        gap: 10px;
+      }
+      .camera-controls button {
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .result-box {
+        padding: 15px;
+        background: white;
+        border-radius: 4px;
+        margin: 10px 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .color-palette {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 10px 0;
+      }
+      #webcam-container {
+        width: 100%;
+        margin: 20px 0;
+        border: 2px dashed #ccc;
+        height: 300px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      #capture-btn {
+        background: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .tagline {
+        color: #666;
+        font-style: italic;
+      }
+      #results {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f8f8;
+        border-radius: 4px;
+      }
     </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1 class="logo">CHROMALYZE</h1>
-            <p class="tagline">Discover Your Perfect Color Palette</p>
-            <div class="status info" id="modelStatus">Loading AI model... Please wait</div>
-        </div>
-
-        <div class="upload-section" id="uploadSection">
-            <div class="upload-icon" id="uploadIcon">📷</div>
-            <div class="upload-text" id="uploadText">Get Your Photo</div>
-            <div class="upload-subtext" id="uploadSubtext">Choose from your device or take a photo with your camera</div>
-            <input type="file" id="imageInput" class="file-input" accept="image/*">
-            <div class="upload-options">
-                <button class="btn btn-primary" id="chooseBtn" onclick="document.getElementById('imageInput').click()">
-                    📁 Choose Image
-                </button>
-                <button class="btn btn-secondary" id="cameraBtn">
-                    📸 Use Camera
-                </button>
-            </div>
-        </div>
-
-        <!-- Camera Modal -->
-        <div class="camera-modal" id="cameraModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>📸 Take Your Photo</h3>
-                    <button class="close-btn" id="closeCamera">&times;</button>
-                </div>
-                <div class="camera-container">
-                    <video id="videoElement" autoplay muted></video>
-                    <canvas id="cameraCanvas" style="display: none;"></canvas>
-                </div>
-                <div class="camera-controls">
-                    <button class="btn btn-secondary" id="switchCamera">🔄 Switch Camera</button>
-                    <button class="btn btn-primary" id="captureBtn">📷 Capture Photo</button>
-                </div>
-                <div class="camera-tips">
-                    💡 Position your face in good lighting and click capture when ready
-                </div>
-            </div>
-        </div>
-
-        <div class="image-preview" id="imagePreview">
-            <img id="previewImg" class="preview-img" alt="Preview">
-        </div>
-
-        <div class="analyze-section">
-            <button class="btn btn-primary" id="analyzeBtn" disabled>
-                Analyze Skin Tone
-            </button>
-        </div>
-
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <div>Analyzing your skin tone...</div>
-        </div>
-
-        <div class="results" id="results">
-            <div class="result-section">
-                <div class="result-title">
-                    🎨 Your Skin Tone Analysis
-                </div>
-                <div class="skin-tone-result" id="skinToneResult">
-                    Analyzing...
-                </div>
-            </div>
-
-            <div class="color-recommendations">
-                <div class="recommendation-card">
-                    <div class="card-title">👗 Recommended Clothing Colors</div>
-                    <div class="color-palette" id="clothingColors"></div>
-                    <div style="font-size: 12px; color: #666; margin-top: 10px;">
-                        These colors will complement your skin tone beautifully
-                    </div>
-                </div>
-                
-                <div class="recommendation-card">
-                    <div class="card-title">💎 Recommended Jewelry Colors</div>
-                    <div class="color-palette" id="jewelryColors"></div>
-                    <div style="font-size: 12px; color: #666; margin-top: 10px;">
-                        Perfect jewelry tones to enhance your natural beauty
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tips">
-            <div class="tips-title">💡 Tips for Best Results:</div>
-            <div class="tips-list">
-                • Use a clear, well-lit photo of your face<br>
-                • Natural lighting works best (avoid harsh shadows)<br>
-                • Make sure your face is clearly visible<br>
-                • Remove any makeup for the most accurate analysis
-            </div>
-        </div>
+  </head>
+  <body>
+  <!-- Load TensorFlow.js and Teachable Machine model -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+  <!-- Load our custom JS -->
+  <script src="scripts/skin-analyzer.js"></script>
+  <h1>CHROMALYZE</h1>
+  <p class="tagline">Skin tone analyzer & personal color advisor</p>
+  <div id="process-status" style="display:none; margin:10px 0; padding:10px; background:#f0f0f0; border-radius:4px;">
+    <p>Processing image...</p>
+  </div>
+  <div id="webcam-container">
+    <div class="webcam-placeholder">Webcam feed will appear here</div>
+    <div id="image-preview" style="display:none;">
+      <img id="processed-image" style="max-width:100%;" />
     </div>
-
-    <script>
-        let model = null;
-        let isModelLoaded = false;
-        let currentImage = null;
-        let videoStream = null;
-        let currentCamera = 'user'; // 'user' for front camera, 'environment' for back camera
-        
-        // Color recommendations based on skin tone
-        const colorRecommendations = {
-            'light': {
-                clothing: [
-                    { color: '#FFB6C1', name: 'Light Pink' },
-                    { color: '#87CEEB', name: 'Sky Blue' },
-                    { color: '#98FB98', name: 'Pale Green' },
-                    { color: '#DDA0DD', name: 'Plum' },
-                    { color: '#F0E68C', name: 'Khaki' },
-                    { color: '#E6E6FA', name: 'Lavender' },
-                    { color: '#FFEFD5', name: 'Papaya Whip' },
-                    { color: '#B0E0E6', name: 'Powder Blue' }
-                ],
-                jewelry: [
-                    { color: '#C0C0C0', name: 'Silver' },
-                    { color: '#E5E4E2', name: 'Platinum' },
-                    { color: '#F8F8FF', name: 'Pearl White' },
-                    { color: '#B0E0E6', name: 'Light Blue' }
-                ]
-            },
-            'medium': {
-                clothing: [
-                    { color: '#DC143C', name: 'Crimson' },
-                    { color: '#4169E1', name: 'Royal Blue' },
-                    { color: '#228B22', name: 'Forest Green' },
-                    { color: '#8B4513', name: 'Brown' },
-                    { color: '#FF8C00', name: 'Dark Orange' },
-                    { color: '#800080', name: 'Purple' },
-                    { color: '#2F4F4F', name: 'Dark Slate' },
-                    { color: '#8B0000', name: 'Dark Red' }
-                ],
-                jewelry: [
-                    { color: '#FFD700', name: 'Gold' },
-                    { color: '#CD7F32', name: 'Bronze' },
-                    { color: '#B87333', name: 'Copper' },
-                    { color: '#FF6347', name: 'Coral' }
-                ]
-            },
-            'dark': {
-                clothing: [
-                    { color: '#FF1493', name: 'Deep Pink' },
-                    { color: '#00CED1', name: 'Turquoise' },
-                    { color: '#32CD32', name: 'Lime Green' },
-                    { color: '#FF4500', name: 'Orange Red' },
-                    { color: '#FFFF00', name: 'Bright Yellow' },
-                    { color: '#FF69B4', name: 'Hot Pink' },
-                    { color: '#00FF7F', name: 'Spring Green' },
-                    { color: '#FF00FF', name: 'Magenta' }
-                ],
-                jewelry: [
-                    { color: '#FFD700', name: 'Gold' },
-                    { color: '#FF6347', name: 'Coral' },
-                    { color: '#40E0D0', name: 'Turquoise' },
-                    { color: '#DA70D6', name: 'Orchid' }
-                ]
-            }
-        };
-
-        // Initialize the app
-        async function initApp() {
-            try {
-                // Load the pre-uploaded model files
-                await loadModel();
-                document.getElementById('modelStatus').textContent = 'AI Model Ready! Upload an image to get started.';
-                document.getElementById('modelStatus').className = 'status success';
-            } catch (error) {
-                console.error('Model loading error:', error);
-                document.getElementById('modelStatus').textContent = 'Error loading AI model. Please refresh the page.';
-                document.getElementById('modelStatus').className = 'status error';
-            }
-        }
-
-        async function loadModel() {
-            try {
-                // Replace these paths with your actual model file paths
-                // You'll need to upload these files to your web server
-                const modelUrl = './model/model.json';  // Path to your model.json
-                const metadataUrl = './model/metadata.json';  // Path to your metadata.json
-                
-                model = await tf.loadLayersModel(modelUrl);
-                isModelLoaded = true;
-                console.log('Model loaded successfully');
-                
-                // Enable image upload
-                setupImageUpload();
-                
-            } catch (error) {
-                console.error('Error loading model:', error);
-                throw error;
-            }
-        }
-
-        function setupImageUpload() {
-            const uploadSection = document.getElementById('uploadSection');
-            const imageInput = document.getElementById('imageInput');
-            const imagePreview = document.getElementById('imagePreview');
-            const previewImg = document.getElementById('previewImg');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const cameraBtn = document.getElementById('cameraBtn');
-            const chooseBtn = document.getElementById('chooseBtn');
-
-            // Make sure the choose button works properly
-            chooseBtn.addEventListener('click', () => {
-                if (isModelLoaded) {
-                    imageInput.click();
-                }
-            });
-            const cameraModal = document.getElementById('cameraModal');
-            const closeCamera = document.getElementById('closeCamera');
-            const switchCamera = document.getElementById('switchCamera');
-            const captureBtn = document.getElementById('captureBtn');
-
-            // Drag and drop functionality for upload section
-            uploadSection.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadSection.classList.add('dragover');
-            });
-
-            uploadSection.addEventListener('dragleave', () => {
-                uploadSection.classList.remove('dragover');
-            });
-
-            uploadSection.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadSection.classList.remove('dragover');
-                
-                if (!isModelLoaded) return;
-                
-                const files = e.dataTransfer.files;
-                if (files.length > 0 && files[0].type.startsWith('image/')) {
-                    handleImageUpload(files[0]);
-                }
-            });
-
-            // File input change
-            imageInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    handleImageUpload(e.target.files[0]);
-                }
-            });
-
-            // Camera button click
-            cameraBtn.addEventListener('click', async () => {
-                if (!isModelLoaded) {
-                    alert('Please wait for the AI model to load!');
-                    return;
-                }
-                await openCamera();
-            });
-
-            // Close camera modal
-            closeCamera.addEventListener('click', closeCamera_);
-            cameraModal.addEventListener('click', (e) => {
-                if (e.target === cameraModal) {
-                    closeCamera_();
-                }
-            });
-
-            // Switch camera
-            switchCamera.addEventListener('click', async () => {
-                currentCamera = currentCamera === 'user' ? 'environment' : 'user';
-                await startCamera();
-            });
-
-            // Capture photo
-            captureBtn.addEventListener('click', capturePhoto);
-
-            // Analyze button
-            analyzeBtn.addEventListener('click', analyzeSkinTone);
-        }
-
-        async function openCamera() {
-            const cameraModal = document.getElementById('cameraModal');
-            cameraModal.style.display = 'block';
-            await startCamera();
-        }
-
-        async function startCamera() {
-            const video = document.getElementById('videoElement');
-            
-            // Stop existing stream
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-            }
-
-            try {
-                videoStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: currentCamera,
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    }
-                });
-                video.srcObject = videoStream;
-            } catch (error) {
-                console.error('Camera error:', error);
-                alert('Unable to access camera. Please ensure you have granted camera permissions or try uploading an image instead.');
-            }
-        }
-
-        function capturePhoto() {
-            const video = document.getElementById('videoElement');
-            const canvas = document.getElementById('cameraCanvas');
-            const ctx = canvas.getContext('2d');
-            const previewImg = document.getElementById('previewImg');
-            const imagePreview = document.getElementById('imagePreview');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-
-            // Set canvas dimensions
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-
-            // Draw video frame to canvas
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Convert canvas to image data URL
-            const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-            
-            // Set preview image
-            previewImg.src = dataURL;
-            imagePreview.style.display = 'block';
-            analyzeBtn.disabled = false;
-            
-            currentImage = previewImg;
-            
-            // Close camera modal
-            closeCamera_();
-            
-            // Hide previous results
-            document.getElementById('results').classList.remove('show');
-
-            // Scroll to preview
-            imagePreview.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function closeCamera_() {
-            const cameraModal = document.getElementById('cameraModal');
-            cameraModal.style.display = 'none';
-            
-            // Stop video stream
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
-            }
-        }
-
-        function handleImageUpload(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const previewImg = document.getElementById('previewImg');
-                const imagePreview = document.getElementById('imagePreview');
-                const analyzeBtn = document.getElementById('analyzeBtn');
-                
-                previewImg.src = e.target.result;
-                imagePreview.style.display = 'block';
-                analyzeBtn.disabled = false;
-                
-                currentImage = previewImg;
-                
-                // Update upload section to show "change image" state
-                updateUploadSectionAfterImage();
-                
-                // Hide results from previous analysis
-                document.getElementById('results').classList.remove('show');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function analyzeSkinTone() {
-            if (!isModelLoaded || !currentImage) {
-                alert('Please upload an image first!');
-                return;
-            }
-
-            const loadingDiv = document.getElementById('loading');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            
-            // Show loading state
-            loadingDiv.style.display = 'block';
-            analyzeBtn.disabled = true;
-            
-            try {
-                // Create canvas and draw image
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Wait for image to load completely
-                await new Promise((resolve) => {
-                    if (currentImage.complete) {
-                        resolve();
-                    } else {
-                        currentImage.onload = resolve;
-                    }
-                });
-                
-                canvas.width = currentImage.naturalWidth;
-                canvas.height = currentImage.naturalHeight;
-                ctx.drawImage(currentImage, 0, 0);
-                
-                // Convert to tensor and preprocess
-                const imgTensor = tf.browser.fromPixels(canvas)
-                    .resizeNearestNeighbor([224, 224]) // Adjust size based on your model
-                    .toFloat()
-                    .div(255.0)
-                    .expandDims(0);
-                
-                // Make prediction
-                const predictions = await model.predict(imgTensor).data();
-                
-                // Process predictions - adjust these labels based on your training
-                const skinToneLabels = ['light', 'medium', 'dark']; 
-                const maxIndex = Array.from(predictions).indexOf(Math.max(...predictions));
-                const confidence = Math.max(...predictions);
-                const predictedSkinTone = skinToneLabels[maxIndex];
-                
-                // Display results
-                displayResults(predictedSkinTone, confidence);
-                
-                // Clean up tensor
-                imgTensor.dispose();
-                
-            } catch (error) {
-                console.error('Prediction error:', error);
-                alert('Error analyzing image. Please try with a different image.');
-            } finally {
-                // Hide loading state
-                loadingDiv.style.display = 'none';
-                analyzeBtn.disabled = false;
-            }
-        }
-
-        function displayResults(skinTone, confidence) {
-            const resultsDiv = document.getElementById('results');
-            const skinToneResult = document.getElementById('skinToneResult');
-            const clothingColors = document.getElementById('clothingColors');
-            const jewelryColors = document.getElementById('jewelryColors');
-            
-            // Display skin tone with confidence
-            const confidencePercentage = (confidence * 100).toFixed(1);
-            skinToneResult.innerHTML = `
-                <div style="font-size: 1.4em; margin-bottom: 10px;">
-                    <strong>${skinTone.toUpperCase()} SKIN TONE</strong>
-                </div>
-                <div style="font-size: 0.9em; color: #666;">
-                    Confidence: ${confidencePercentage}%
-                </div>
-                <div style="font-size: 0.8em; color: #888; margin-top: 10px;">
-                    ${getSkinToneDescription(skinTone)}
-                </div>
-            `;
-            
-            // Clear previous recommendations
-            clothingColors.innerHTML = '';
-            jewelryColors.innerHTML = '';
-            
-            // Get recommendations for the detected skin tone
-            const recommendations = colorRecommendations[skinTone] || colorRecommendations['medium'];
-            
-            // Display clothing colors
-            recommendations.clothing.forEach(colorInfo => {
-                const colorItem = createColorItem(colorInfo.color, colorInfo.name);
-                clothingColors.appendChild(colorItem);
-            });
-            
-            // Display jewelry colors
-            recommendations.jewelry.forEach(colorInfo => {
-                const colorItem = createColorItem(colorInfo.color, colorInfo.name);
-                jewelryColors.appendChild(colorItem);
-            });
-            
-            // Show results with animation
-            setTimeout(() => {
-                resultsDiv.classList.add('show');
-            }, 100);
-        }
-
-        function createColorItem(color, name) {
-            const colorItem = document.createElement('div');
-            colorItem.className = 'color-item';
-            
-            const swatch = document.createElement('div');
-            swatch.className = 'color-swatch';
-            swatch.style.backgroundColor = color;
-            swatch.title = name;
-            
-            const colorName = document.createElement('div');
-            colorName.className = 'color-name';
-            colorName.textContent = name;
-            
-            colorItem.appendChild(swatch);
-            colorItem.appendChild(colorName);
-            
-            return colorItem;
-        }
-
-        function getSkinToneDescription(skinTone) {
-            const descriptions = {
-                'light': 'Light skin tones look great in soft, muted colors and pastels',
-                'medium': 'Medium skin tones can wear rich, vibrant colors beautifully',
-                'dark': 'Dark skin tones shine in bright, bold, and jewel-toned colors'
-            };
-            return descriptions[skinTone] || '';
-        }
-
-        // Initialize the app when the page loads
-        window.addEventListener('load', initApp);
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-            }
-        });
-    </script>
-</body>
-</html>
+  </div>
+  <div class="camera-controls">
+    <button id="start-camera-btn">Start Camera</button>
+    <button id="capture-btn" disabled>Capture Image</button>
+    <button id="analyze-btn" disabled>Analyze Skin Tone</button>
+  </div>
+  <div id="results" style="display:none;">
+    <div class="result-section">
+      <h3>Tone Analysis Results:</h3>
+      <div id="tone-result" class="result-box"></div>
+      <div id="confidence-meter" style="height:10px; background:#eee; margin:10px 0;">
+        <div id="confidence-level" style="height:100%; width:0%; background:#4CAF50;"></div>
+      </div>
+      <p id="quality-warning" style="color:#f44336; display:none;">
+        Warning: Image quality may affect accuracy
+      </p>
+    </div>
+    <div class="color-section">
+      <h3>Recommended Colors:</h3>
+      <div id="color-recommendations" class="color-palette"></div>
+    </div>
+  </div>
+  </body>
+  </html>
+  
