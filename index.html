@@ -3,1314 +3,664 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHROMALYZE - Skin Tone Color Analyzer</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.20.0/tf.min.js"></script>
+    <title>CHROMALYZER</title>
     <style>
+        :root {
+            --cool-primary: #6b8cff;
+            --cool-secondary: #a8c4ff;
+            --warm-primary: #ff9f4d;
+            --warm-secondary: #ffd4a8;
+            --neutral-primary: #9e9e9e;
+            --neutral-secondary: #d4d4d4;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: #f8f9fa;
             padding: 20px;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
             padding: 30px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            max-width: 900px;
-            width: 100%;
         }
 
-        .header {
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background-color: #4285f4;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .input-btn:hover {
+            background-color: #3367d6;
+            transform: translateY(-2px);
+        }
+
+        .input-btn.webcam {
+            background-color: #34a853;
+        }
+
+        .input-btn.webcam:hover {
+            background-color: #2d9248;
+        }
+
+        .input-btn.reset {
+            background-color: #ea4335;
+        }
+
+        .input-btn.reset:hover {
+            background-color: #d33426;
+        }
+
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .image-preview {
+            width: 300px;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .placeholder-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background-color: #eee;
+            color: #999;
+            font-weight: 500;
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .skin-tone-result {
             text-align: center;
             margin-bottom: 30px;
         }
 
-        .logo {
-            font-size: 2.5em;
-            font-weight: bold;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-        }
-
-        .tagline {
-            color: #666;
-            font-size: 1.1em;
-            margin-bottom: 20px;
-        }
-
-        .upload-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 30px;
-            border: 3px dashed #667eea;
-            border-radius: 20px;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
-            transition: all 0.3s ease;
-        }
-
-        .upload-section:hover {
-            border-color: #764ba2;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-            transform: translateY(-2px);
-        }
-
-        .upload-section.dragover {
-            border-color: #764ba2;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-            transform: scale(1.02);
-        }
-
-        .upload-icon {
-            font-size: 4em;
-            color: #667eea;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .upload-section:hover .upload-icon {
-            transform: scale(1.1);
-            color: #764ba2;
-        }
-
-        .upload-text {
-            font-size: 1.2em;
-            color: #333;
+        .skin-tone-label {
+            font-size: 28px;
             font-weight: 600;
             margin-bottom: 10px;
+            color: #333;
         }
 
-        .upload-subtext {
+        .skin-tone-desc {
+            font-size: 18px;
             color: #666;
-            font-size: 0.9em;
             margin-bottom: 20px;
+        }
+
+        .confidence-meter {
+            height: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+            margin: 15px auto;
+            max-width: 300px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4285f4, #34a853);
+            transition: width 0.5s ease;
+        }
+
+        .favorable-colors {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .colors-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .colors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .color-card {
+            height: 100px;
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .color-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .color-name {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tone-info {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 30px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .tone-info h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .tone-info ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
         }
 
         .file-input {
             display: none;
         }
 
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #f8f9fa;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .btn-secondary:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .image-preview {
-            display: none;
-            margin: 20px 0;
-            text-align: center;
-        }
-
-        .preview-img {
-            max-width: 400px;
-            max-height: 300px;
-            border-radius: 15px;
-            border: 3px solid #667eea;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .analyze-section {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .results {
-            display: none;
-            margin-top: 30px;
-            padding: 25px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 15px;
-            border: 1px solid #dee2e6;
-        }
-
-        .results.show {
-            display: block;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .result-section {
-            margin-bottom: 25px;
-        }
-
-        .result-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .skin-tone-result {
-            font-size: 1.2em;
-            padding: 20px;
-            background: white;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-            color: #333;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .color-recommendations {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .recommendation-card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .recommendation-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card-title {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-
-        .color-palette {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .color-item {
-            text-align: center;
-            transition: transform 0.2s ease;
-        }
-
-        .color-item:hover {
-            transform: scale(1.1);
-        }
-
-        .color-swatch {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            border: 3px solid #fff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .color-swatch:hover {
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-        }
-
-        .color-name {
-            font-size: 12px;
-            color: #666;
-            margin-top: 8px;
-            font-weight: 500;
-        }
-
-        .status {
-            text-align: center;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 10px;
-            font-weight: 500;
-        }
-
-        .status.info {
-            background: linear-gradient(135deg, #cce7ff, #b3d9ff);
-            color: #0066cc;
-            border: 1px solid #99d6ff;
-        }
-
-        .status.success {
-            background: linear-gradient(135deg, #d4edda, #c3e6cb);
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.error {
-            background: linear-gradient(135deg, #f8d7da, #f1b0b7);
-            color: #721c24;
-            border: 1px solid #f1b0b7;
-        }
-
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            margin: 20px 0;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            border-top-color: #4285f4;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 15px auto;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
 
-        .tips {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
-        }
-
-        .tips-title {
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .tips-list {
-            color: #555;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-            @media (max-width: 768px) {
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
             .container {
                 padding: 20px;
-                margin: 10px;
             }
             
-            .logo {
-                font-size: 2em;
-            }
-            
-            .preview-img {
-                max-width: 100%;
-                max-height: 250px;
-            }
-            
-            .color-recommendations {
-                grid-template-columns: 1fr;
-            }
-            
-            .color-palette {
-                justify-content: center;
-            }
-
-            .upload-options {
+            .preview-container {
                 flex-direction: column;
                 align-items: center;
             }
-
-            .upload-options .btn {
-                width: 200px;
+            
+            .image-preview {
+                width: 250px;
+                height: 250px;
             }
-
-            .modal-content {
-                width: 95%;
-                margin: 5% auto;
-                padding: 15px;
-            }
-
-            .camera-controls {
+            
+            .input-options {
                 flex-direction: column;
                 align-items: center;
-            }
-
-            .camera-controls .btn {
-                width: 180px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1 class="logo">CHROMALYZE</h1>
-            <p class="tagline">Discover Your Perfect Color Palette</p>
-            <div class="status info" id="modelStatus">Loading AI model... Please wait</div>
-        </div>
-
-        <div class="upload-section" id="uploadSection">
-            <div class="upload-icon" id="uploadIcon">📷</div>
-            <div class="upload-text" id="uploadText">Get Your Photo</div>
-            <div class="upload-subtext" id="uploadSubtext">Choose from your device or take a photo with your camera</div>
-            <input type="file" id="imageInput" class="file-input" accept="image/*">
-            <div class="upload-options">
-                <button class="btn btn-primary" id="chooseBtn" onclick="document.getElementById('imageInput').click()">
-                    📁 Choose Image
-                </button>
-                <button class="btn btn-secondary" id="cameraBtn">
-                    📸 Use Camera
-                </button>
+        <h1>CHROMALYZER</h1>
+        <p class="description">
+            Upload an image or use your webcam to analyze skin tones and discover color harmonies.
+            Our AI identifies undertones (cool, warm, neutral) and suggests personalized color palettes.
+        </p>
+        
+        <div class="input-section">
+            <div class="input-options">
+                <button class="input-btn" id="uploadBtn">Upload Image</button>
+                <button class="input-btn webcam" id="webcamBtn">Use Webcam</button>
+                <button class="input-btn reset" id="resetBtn" style="display: none;">Reset</button>
+                <input type="file" accept="image/*" class="file-input" id="fileInput">
             </div>
         </div>
-
-        <!-- Camera Modal -->
-        <div class="camera-modal" id="cameraModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>📸 Take Your Photo</h3>
-                    <button class="close-btn" id="closeCamera">&times;</button>
-                </div>
-                <div class="camera-container">
-                    <video id="videoElement" autoplay muted></video>
-                    <canvas id="cameraCanvas" style="display: none;"></canvas>
-                </div>
-                <div class="camera-controls">
-                    <button class="btn btn-secondary" id="switchCamera">🔄 Switch Camera</button>
-                    <button class="btn btn-primary" id="captureBtn">📷 Capture Photo</button>
-                </div>
-                <div class="camera-tips">
-                    💡 Position your face in good lighting and click capture when ready
+        
+        <div class="preview-container">
+            <div class="image-preview">
+                <div class="placeholder-text">
+                    No image selected or webcam inactive
                 </div>
             </div>
         </div>
-
-        <div class="image-preview" id="imagePreview">
-            <img id="previewImg" class="preview-img" alt="Preview">
-        </div>
-
-        <div class="analyze-section">
-            <button class="btn btn-primary" id="analyzeBtn" disabled>
-                Analyze Skin Tone
-            </button>
-        </div>
-
-        <div class="loading" id="loading">
+        
+        <div class="loading">
             <div class="spinner"></div>
-            <div>Analyzing your skin tone...</div>
+            <p>Analyzing colors...</p>
         </div>
-
-        <div class="results" id="results">
-            <div class="result-section">
-                <div class="result-title">
-                    🎨 Your Skin Tone Analysis
-                </div>
-                <div class="skin-tone-result" id="skinToneResult">
-                    Analyzing...
+        
+        <div class="results-section" id="resultsSection">
+            <div class="skin-tone-result">
+                <div class="skin-tone-label" id="toneLabel">Color Analysis</div>
+                <div class="skin-tone-desc" id="toneDesc">Undertone detected</div>
+                <div class="confidence-meter">
+                    <div class="confidence-fill" id="confidenceBar"></div>
                 </div>
             </div>
-
-            <div class="color-recommendations">
-                <div class="recommendation-card">
-                    <div class="card-title">👗 Recommended Clothing Colors</div>
-                    <div class="color-palette" id="clothingColors"></div>
-                    <div style="font-size: 12px; color: #666; margin-top: 10px;">
-                        These colors will complement your skin tone beautifully
-                    </div>
-                </div>
-                
-                <div class="recommendation-card">
-                    <div class="card-title">💎 Recommended Jewelry Colors</div>
-                    <div class="color-palette" id="jewelryColors"></div>
-                    <div style="font-size: 12px; color: #666; margin-top: 10px;">
-                        Perfect jewelry tones to enhance your natural beauty
-                    </div>
-                </div>
+            
+            <div class="favorable-colors">
+                <div class="colors-title">Recommended Colors</div>
+                <p>These colors will complement your skin tone beautifully</p>
+                <div class="colors-grid" id="colorsGrid"></div>
             </div>
-        </div>
-
-        <div class="tips">
-            <div class="tips-title">💡 Tips for Best Results:</div>
-            <div class="tips-list">
-                • Use a clear, well-lit photo of your face<br>
-                • Natural lighting works best (avoid harsh shadows)<br>
-                • Make sure your face is clearly visible<br>
-                • Remove any makeup for the most accurate analysis
+            
+            <div class="tone-info">
+                <h3>About Your Skin Tone</h3>
+                <p id="toneInfoText">
+                    Based on our analysis, your skin shows an undertone that falls into this category.
+                </p>
+                <p>For best results:</p>
+                <ul id="toneTipsList">
+                    <li>Tips will appear here based on your skin tone</li>
+                </ul>
             </div>
         </div>
     </div>
 
-    <script>
-        let model = null;
-        let isModelLoaded = false;
-        let currentImage = null;
-        let videoStream = null;
-        let currentCamera = 'user'; // 'user' for front camera, 'environment' for back camera
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
+    <script type="text/javascript">
+        // Model and UI variables
+        let model;
+        let webcam;
+        let isWebcamActive = false;
         
-        // Color recommendations based on skin tone
-        const colorRecommendations = {
-            'light': {
-                clothing: [
-                    { color: '#FFB6C1', name: 'Light Pink' },
-                    { color: '#87CEEB', name: 'Sky Blue' },
-                    { color: '#98FB98', name: 'Pale Green' },
-                    { color: '#DDA0DD', name: 'Plum' },
-                    { color: '#F0E68C', name: 'Khaki' },
-                    { color: '#E6E6FA', name: 'Lavender' },
-                    { color: '#FFEFD5', name: 'Papaya Whip' },
-                    { color: '#B0E0E6', name: 'Powder Blue' }
+        // DOM elements
+        const uploadBtn = document.getElementById('uploadBtn');
+        const webcamBtn = document.getElementById('webcamBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.querySelector('.image-preview');
+        const placeholderText = document.querySelector('.placeholder-text');
+        const loadingDiv = document.querySelector('.loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const toneLabel = document.getElementById('toneLabel');
+        const toneDesc = document.getElementById('toneDesc');
+        const confidenceBar = document.getElementById('confidenceBar');
+        const colorsGrid = document.getElementById('colorsGrid');
+        const toneInfoText = document.getElementById('toneInfoText');
+        const toneTipsList = document.getElementById('toneTipsList');
+        
+        // Skin tone data
+        const skinTones = {
+            'cool': {
+                label: 'Cool Undertone',
+                desc: 'Your skin has blue/pink undertones',
+                info: 'Cool undertones typically have veins that appear blue or purple on the inner wrist, and silver jewelry tends to look more flattering than gold. People with cool undertones often burn easily in the sun and may have naturally rosy cheeks.',
+                tips: [
+                    'Jewel tones like emerald, sapphire, and amethyst will look stunning',
+                    'Pastel shades complement your complexion beautifully',
+                    'Cool pinks and berry tones enhance your natural glow',
+                    'Opt for pure white over off-white or cream',
+                    'Silver and platinum jewelry will look best'
                 ],
-                jewelry: [
-                    { color: '#C0C0C0', name: 'Silver' },
-                    { color: '#E5E4E2', name: 'Platinum' },
-                    { color: '#F8F8FF', name: 'Pearl White' },
-                    { color: '#B0E0E6', name: 'Light Blue' }
+                colors: [
+                    {name: 'Cool Navy', hex: '#001f3f'},
+                    {name: 'Sapphire', hex: '#0f52ba'},
+                    {name: 'Emerald', hex: '#50c878'},
+                    {name: 'Amethyst', hex: '#9966cc'},
+                    {name: 'Fuchsia', hex: '#ff00ff'},
+                    {name: 'Ruby', hex: '#e0115f'},
+                    {name: 'Silver', hex: '#c0c0c0'},
+                    {name: 'Rose', hex: '#ff66b2'}
                 ]
             },
-            'medium': {
-                clothing: [
-                    { color: '#DC143C', name: 'Crimson' },
-                    { color: '#4169E1', name: 'Royal Blue' },
-                    { color: '#228B22', name: 'Forest Green' },
-                    { color: '#8B4513', name: 'Brown' },
-                    { color: '#FF8C00', name: 'Dark Orange' },
-                    { color: '#800080', name: 'Purple' },
-                    { color: '#2F4F4F', name: 'Dark Slate' },
-                    { color: '#8B0000', name: 'Dark Red' }
+            'warm': {
+                label: 'Warm Undertone',
+                desc: 'Your skin has golden/yellow undertones',
+                info: 'Warm undertones typically have veins that appear green on the inner wrist, and gold jewelry tends to look more flattering than silver. People with warm undertones often tan easily and may appear yellowish in certain lighting.',
+                tips: [
+                    'Earth tones like terracotta, olive, and mustard will enhance your complexion',
+                    'Rich autumnal colors work beautifully with your skin',
+                    'Peach and coral tones will brighten your face',
+                    'Opt for cream or ivory over pure white',
+                    'Gold and rose gold jewelry will look best'
                 ],
-                jewelry: [
-                    { color: '#FFD700', name: 'Gold' },
-                    { color: '#CD7F32', name: 'Bronze' },
-                    { color: '#B87333', name: 'Copper' },
-                    { color: '#FF6347', name: 'Coral' }
+                colors: [
+                    {name: 'Terracotta', hex: '#e2725b'},
+                    {name: 'Olive', hex: '#808000'},
+                    {name: 'Mustard', hex: '#ffdb58'},
+                    {name: 'Coral', hex: '#ff7f50'},
+                    {name: 'Gold', hex: '#ffd700'},
+                    {name: 'Burnt Orange', hex: '#cc5500'},
+                    {name: 'Camel', hex: '#c19a6b'},
+                    {name: 'Rust', hex: '#b7410e'}
                 ]
             },
-            'dark': {
-                clothing: [
-                    { color: '#FF1493', name: 'Deep Pink' },
-                    { color: '#00CED1', name: 'Turquoise' },
-                    { color: '#32CD32', name: 'Lime Green' },
-                    { color: '#FF4500', name: 'Orange Red' },
-                    { color: '#FFFF00', name: 'Bright Yellow' },
-                    { color: '#FF69B4', name: 'Hot Pink' },
-                    { color: '#00FF7F', name: 'Spring Green' },
-                    { color: '#FF00FF', name: 'Magenta' }
+            'neutral': {
+                label: 'Neutral Undertone',
+                desc: 'Your skin has a balance of warm and cool tones',
+                info: 'Neutral undertones typically have veins that appear bluish-green on the inner wrist, and both silver and gold jewelry look equally flattering. People with neutral undertones have the most flexibility in color choices as most hues will complement their skin.',
+                tips: [
+                    'Pretty much all colors look good on you - experiment freely!',
+                    'Muted versions of colors often work best',
+                    'Dusty pinks and soft blues are particularly flattering',
+                    'Both silver and gold jewelry look great',
+                    'You can wear both warm and cool colors effectively'
                 ],
-                jewelry: [
-                    { color: '#FFD700', name: 'Gold' },
-                    { color: '#FF6347', name: 'Coral' },
-                    { color: '#40E0D0', name: 'Turquoise' },
-                    { color: '#DA70D6', name: 'Orchid' }
+                colors: [
+                    {name: 'Dusty Rose', hex: '#d4a6a6'},
+                    {name: 'Mauve', hex: '#e0b0ff'},
+                    {name: 'Soft Teal', hex: '#80ced6'},
+                    {name: 'Taupe', hex: '#483c32'},
+                    {name: 'Moss', hex: '#8a9a5b'},
+                    {name: 'Lavender', hex: '#e6e6fa'},
+                    {name: 'Rose Gold', hex: '#e0bfb8'},
+                    {name: 'Slate Blue', hex: '#6a5acd'}
                 ]
             }
         };
-
-        // Initialize the app
-        async function initApp() {
+        
+        // Load Teachable Machine model
+        async function init() {
+            const modelURL = './model/model.json'; // Local model file
+            const metadataURL = './model/metadata.json'; // Local metadata file
+            
             try {
-                // Load the pre-uploaded model files
-                await loadModel();
-                document.getElementById('modelStatus').textContent = 'AI Model Ready! Upload an image to get started.';
-                document.getElementById('modelStatus').className = 'status success';
-            } catch (error) {
-                console.error('Model loading error:', error);
-                document.getElementById('modelStatus').textContent = 'Error loading AI model. Please refresh the page.';
-                document.getElementById('modelStatus').className = 'status error';
-            }
-        }
-
-        async function loadModel() {
-            try {
-                // Replace these paths with your actual model file paths
-                // You'll need to upload these files to your web server
-                const modelUrl = './model/model.json';  // Path to your model.json
-                const metadataUrl = './model/metadata.json';  // Path to your metadata.json
+                loadingDiv.style.display = 'block';
                 
-                model = await tf.loadLayersModel(modelUrl);
-                isModelLoaded = true;
+                // Load the model and metadata
+                model = await tmImage.load(modelURL, metadataURL);
+                
                 console.log('Model loaded successfully');
+                loadingDiv.style.display = 'none';
                 
-                // Enable image upload
-                setupImageUpload();
-                
+                // Set up event listeners
+                setupEventListeners();
             } catch (error) {
                 console.error('Error loading model:', error);
-                throw error;
-            }
-        }
-
-        function setupImageUpload() {
-            const uploadSection = document.getElementById('uploadSection');
-            const imageInput = document.getElementById('imageInput');
-            const imagePreview = document.getElementById('imagePreview');
-            const previewImg = document.getElementById('previewImg');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const cameraBtn = document.getElementById('cameraBtn');
-            const chooseBtn = document.getElementById('chooseBtn');
-
-            // Make sure the choose button works properly
-            chooseBtn.addEventListener('click', () => {
-                if (isModelLoaded) {
-                    imageInput.click();
-                }
-            });
-            const cameraModal = document.getElementById('cameraModal');
-            const closeCamera = document.getElementById('closeCamera');
-            const switchCamera = document.getElementById('switchCamera');
-            const captureBtn = document.getElementById('captureBtn');
-
-            // Drag and drop functionality for upload section
-            uploadSection.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadSection.classList.add('dragover');
-            });
-
-            uploadSection.addEventListener('dragleave', () => {
-                uploadSection.classList.remove('dragover');
-            });
-
-            uploadSection.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadSection.classList.remove('dragover');
-                
-                if (!isModelLoaded) return;
-                
-                const files = e.dataTransfer.files;
-                if (files.length > 0 && files[0].type.startsWith('image/')) {
-                    handleImageUpload(files[0]);
-                }
-            });
-
-            // File input change
-            imageInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    handleImageUpload(e.target.files[0]);
-                }
-            });
-
-            // Camera button click
-            cameraBtn.addEventListener('click', async () => {
-                if (!isModelLoaded) {
-                    alert('Please wait for the AI model to load!');
-                    return;
-                }
-                await openCamera();
-            });
-
-            // Close camera modal
-            closeCamera.addEventListener('click', closeCamera_);
-            cameraModal.addEventListener('click', (e) => {
-                if (e.target === cameraModal) {
-                    closeCamera_();
-                }
-            });
-
-            // Switch camera
-            switchCamera.addEventListener('click', async () => {
-                currentCamera = currentCamera === 'user' ? 'environment' : 'user';
-                await startCamera();
-            });
-
-            // Capture photo
-            captureBtn.addEventListener('click', capturePhoto);
-
-            // Analyze button
-            analyzeBtn.addEventListener('click', analyzeSkinTone);
-        }
-
-        async function openCamera() {
-            const cameraModal = document.getElementById('cameraModal');
-            cameraModal.style.display = 'block';
-            await startCamera();
-        }
-
-        async function startCamera() {
-            const video = document.getElementById('videoElement');
-            
-            // Stop existing stream
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-            }
-
-            try {
-                videoStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: currentCamera,
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    }
-                });
-                video.srcObject = videoStream;
-            } catch (error) {
-                console.error('Camera error:', error);
-                alert('Unable to access camera. Please ensure you have granted camera permissions or try uploading an image instead.');
-            }
-        }
-
-        function capturePhoto() {
-            const video = document.getElementById('videoElement');
-            const canvas = document.getElementById('cameraCanvas');
-            const ctx = canvas.getContext('2d');
-            const previewImg = document.getElementById('previewImg');
-            const imagePreview = document.getElementById('imagePreview');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-
-            // Set canvas dimensions
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-
-            // Draw video frame to canvas
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Convert canvas to image data URL
-            const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-            
-            // Set preview image
-            previewImg.src = dataURL;
-            imagePreview.style.display = 'block';
-            analyzeBtn.disabled = false;
-            
-            currentImage = previewImg;
-            
-            // Close camera modal
-            closeCamera_();
-            
-            // Hide previous results
-            document.getElementById('results').classList.remove('show');
-
-            // Scroll to preview
-            imagePreview.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function closeCamera_() {
-            const cameraModal = document.getElementById('cameraModal');
-            cameraModal.style.display = 'none';
-            
-            // Stop video stream
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
-            }
-        }
-
-        function handleImageUpload(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const previewImg = document.getElementById('previewImg');
-                const imagePreview = document.getElementById('imagePreview');
-                const analyzeBtn = document.getElementById('analyzeBtn');
-                
-                previewImg.src = e.target.result;
-                imagePreview.style.display = 'block';
-                analyzeBtn.disabled = false;
-                
-                currentImage = previewImg;
-                
-                // Update upload section to show "change image" state
-                updateUploadSectionAfterImage();
-                
-                // Hide results from previous analysis
-                document.getElementById('results').classList.remove('show');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        async function analyzeSkinTone() {
-            if (!isModelLoaded || !currentImage) {
-                alert('Please upload an image first!');
-                return;
-            }
-
-            const loadingDiv = document.getElementById('loading');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            
-            // Show loading state
-            loadingDiv.style.display = 'block';
-            analyzeBtn.disabled = true;
-            
-            try {
-                // Create canvas and draw image
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Wait for image to load completely
-                await new Promise((resolve) => {
-                    if (currentImage.complete) {
-                        resolve();
-                    } else {
-                        currentImage.onload = resolve;
-                    }
-                });
-                
-                canvas.width = currentImage.naturalWidth;
-                canvas.height = currentImage.naturalHeight;
-                ctx.drawImage(currentImage, 0, 0);
-                
-                // Convert to tensor and preprocess
-                const imgTensor = tf.browser.fromPixels(canvas)
-                    .resizeNearestNeighbor([224, 224]) // Adjust size based on your model
-                    .toFloat()
-                    .div(255.0)
-                    .expandDims(0);
-                
-                // Make prediction
-                const predictions = await model.predict(imgTensor).data();
-                
-                // Process predictions - adjust these labels based on your training
-                const skinToneLabels = ['light', 'medium', 'dark']; 
-                const maxIndex = Array.from(predictions).indexOf(Math.max(...predictions));
-                const confidence = Math.max(...predictions);
-                const predictedSkinTone = skinToneLabels[maxIndex];
-                
-                // Display results
-                displayResults(predictedSkinTone, confidence);
-                
-                // Clean up tensor
-                imgTensor.dispose();
-                
-            } catch (error) {
-                console.error('Prediction error:', error);
-                alert('Error analyzing image. Please try with a different image.');
-            } finally {
-                // Hide loading state
                 loadingDiv.style.display = 'none';
-                analyzeBtn.disabled = false;
+                alert('Error loading the model. Please check the console for details.');
             }
         }
-
-        function displayResults(skinTone, confidence) {
-            const resultsDiv = document.getElementById('results');
-            const skinToneResult = document.getElementById('skinToneResult');
-            const clothingColors = document.getElementById('clothingColors');
-            const jewelryColors = document.getElementById('jewelryColors');
-            
-            // Display skin tone with confidence
-            const confidencePercentage = (confidence * 100).toFixed(1);
-            skinToneResult.innerHTML = `
-                <div style="font-size: 1.4em; margin-bottom: 10px;">
-                    <strong>${skinTone.toUpperCase()} SKIN TONE</strong>
-                </div>
-                <div style="font-size: 0.9em; color: #666;">
-                    Confidence: ${confidencePercentage}%
-                </div>
-                <div style="font-size: 0.8em; color: #888; margin-top: 10px;">
-                    ${getSkinToneDescription(skinTone)}
-                </div>
-            `;
-            
-            // Clear previous recommendations
-            clothingColors.innerHTML = '';
-            jewelryColors.innerHTML = '';
-            
-            // Get recommendations for the detected skin tone
-            const recommendations = colorRecommendations[skinTone] || colorRecommendations['medium'];
-            
-            // Display clothing colors
-            recommendations.clothing.forEach(colorInfo => {
-                const colorItem = createColorItem(colorInfo.color, colorInfo.name);
-                clothingColors.appendChild(colorItem);
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            uploadBtn.addEventListener('click', () => {
+                fileInput.click();
             });
             
-            // Display jewelry colors
-            recommendations.jewelry.forEach(colorInfo => {
-                const colorItem = createColorItem(colorInfo.color, colorInfo.name);
-                jewelryColors.appendChild(colorItem);
+            fileInput.addEventListener('change', (e) => {
+                handleImageUpload(e.target.files[0]);
             });
             
-            // Show results with animation
-            setTimeout(() => {
-                resultsDiv.classList.add('show');
-            }, 100);
+            webcamBtn.addEventListener('click', toggleWebcam);
+            
+            resetBtn.addEventListener('click', resetApp);
         }
-
-        function createColorItem(color, name) {
-            const colorItem = document.createElement('div');
-            colorItem.className = 'color-item';
+        
+        // Handle image upload
+        async function handleImageUpload(file) {
+            if (!file) return;
             
-            const swatch = document.createElement('div');
-            swatch.className = 'color-swatch';
-            swatch.style.backgroundColor = color;
-            swatch.title = name;
-            
-            const colorName = document.createElement('div');
-            colorName.className = 'color-name';
-            colorName.textContent = name;
-            
-            colorItem.appendChild(swatch);
-            colorItem.appendChild(colorName);
-            
-            return colorItem;
-        }
-
-        function getSkinToneDescription(skinTone) {
-            const descriptions = {
-                'light': 'Light skin tones look great in soft, muted colors and pastels',
-                'medium': 'Medium skin tones can wear rich, vibrant colors beautifully',
-                'dark': 'Dark skin tones shine in bright, bold, and jewel-toned colors'
-            };
-            return descriptions[skinTone] || '';
-        }
-
-        // Initialize the app when the page loads
-        window.addEventListener('load', initApp);
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
+            try {
+                // Display the image
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    
+                    // Clear previous content
+                    previewContainer.innerHTML = '';
+                    previewContainer.appendChild(img);
+                    
+                    // Predict after image is loaded
+                    img.onload = () => {
+                        predict(img);
+                    };
+                };
+                reader.readAsDataURL(file);
+                
+                // Show reset button
+                resetBtn.style.display = 'block';
+                isWebcamActive = false;
+            } catch (error) {
+                console.error('Error handling image upload:', error);
             }
-        });
+        }
+        
+        // Toggle webcam
+        async function toggleWebcam() {
+            try {
+                if (!isWebcamActive) {
+                    // Start webcam
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: true, 
+                        audio: false 
+                    });
+                    
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.autoplay = true;
+                    
+                    // Clear previous content
+                    previewContainer.innerHTML = '';
+                    previewContainer.appendChild(video);
+                    
+                    webcam = video;
+                    isWebcamActive = true;
+                    resetBtn.style.display = 'block';
+                    webcamBtn.textContent = 'Stop Webcam';
+                    
+                    // Start prediction loop
+                    predictLoop();
+                } else {
+                    // Stop webcam
+                    if (webcam && webcam.srcObject) {
+                        webcam.srcObject.getTracks().forEach(track => track.stop());
+                    }
+                    
+                    previewContainer.innerHTML = '';
+                    previewContainer.appendChild(document.createElement('div'));
+                    
+                    isWebcamActive = false;
+                    webcamBtn.textContent = 'Use Webcam';
+                    resetBtn.style.display = 'none';
+                    resultsSection.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+                alert('Could not access the webcam. Please ensure you have granted camera permissions.');
+            }
+        }
+        
+        // Prediction loop for webcam
+        async function predictLoop() {
+            if (isWebcamActive && webcam && model) {
+                await predict(webcam);
+                window.requestAnimationFrame(predictLoop);
+            }
+        }
+        
+        // Predict skin tone
+        async function predict(imageElement) {
+            if (!model) return;
+            
+            try {
+                loadingDiv.style.display = 'block';
+                resultsSection.style.display = 'none';
+                
+                // Make a prediction
+                const prediction = await model.predict(imageElement);
+                
+                // Format results
+                const topResult = prediction[0]; // Assuming the first class is the primary result
+                const toneType = topResult.className.toLowerCase(); // 'cool', 'warm', or 'neutral'
+                
+                // Update UI with results
+                updateResults(toneType, topResult.probability);
+                
+                loadingDiv.style.display = 'none';
+                resultsSection.style.display = 'block';
+            } catch (error) {
+                console.error('Error during prediction:', error);
+                loadingDiv.style.display = 'none';
+            }
+        }
+        
+        // Update results display
+        function updateResults(toneType, confidence) {
+            const toneData = skinTones[toneType] || skinTones['neutral'];
+            
+            // Set basic tone info
+            toneLabel.textContent = toneData.label;
+            toneDesc.textContent = toneData.desc;
+            confidenceBar.style.width = `${confidence * 100}%`;
+            
+            // Set tone information
+            toneInfoText.textContent = toneData.info;
+            
+            // Clear previous tips
+            toneTipsList.innerHTML = '';
+            
+            // Add new tips
+            toneData.tips.forEach(tip => {
+                const li = document.createElement('li');
+                li.textContent = tip;
+                toneTipsList.appendChild(li);
+            });
+            
+            // Clear previous colors
+            colorsGrid.innerHTML = '';
+            
+            // Add recommended colors
+            toneData.colors.forEach(color => {
+                const colorCard = document.createElement('div');
+                colorCard.className = 'color-card';
+                colorCard.style.backgroundColor = color.hex;
+                
+                const colorName = document.createElement('div');
+                colorName.className = 'color-name';
+                colorName.textContent = color.name;
+                
+                colorCard.appendChild(colorName);
+                colorsGrid.appendChild(colorCard);
+            });
+        }
+        
+        // Reset the app
+        function resetApp() {
+            // Stop webcam if active
+            if (isWebcamActive) {
+                webcam.srcObject.getTracks().forEach(track => track.stop());
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(document.createElement('div'));
+                isWebcamActive = false;
+                webcamBtn.textContent = 'Use Webcam';
+            }
+            
+            // Reset file input
+            fileInput.value = '';
+            
+            // Hide results
+            resultsSection.style.display = 'none';
+            
+            // Hide reset button
+            resetBtn.style.display = 'none';
+            
+            // Reset preview
+            previewContainer.innerHTML = '';
+            const placeholder = document.createElement('div');
+            placeholder.className = 'placeholder-text';
+            placeholder.textContent = 'No image selected or webcam inactive';
+            previewContainer.appendChild(placeholder);
+        }
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
-import React from 'react';
-
-const ArchitectureDiagram = () => {
-  return (
-    <div className="w-full max-w-6xl mx-auto p-6 bg-gradient-to-br from-blue-50 to-purple-50">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-          CHROMALYZE Architecture
-        </h1>
-        <p className="text-gray-600 text-lg">Skin Tone Color Analyzer System Design</p>
-      </div>
-
-      {/* Frontend Layer */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <div className="w-4 h-4 bg-blue-500 rounded mr-3"></div>
-          Frontend Layer
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
-            <h3 className="font-bold text-blue-700 mb-2">📱 User Interface</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Drag & drop image upload</li>
-              <li>• Camera integration</li>
-              <li>• Real-time preview</li>
-              <li>• Results visualization</li>
-              <li>• Color palette display</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
-            <h3 className="font-bold text-blue-700 mb-2">🎨 Styling & UX</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• CSS3 with gradients</li>
-              <li>• Responsive design</li>
-              <li>• Smooth animations</li>
-              <li>• Interactive elements</li>
-              <li>• Accessibility features</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
-            <h3 className="font-bold text-blue-700 mb-2">⚡ Client-Side Logic</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Image preprocessing</li>
-              <li>• Camera API handling</li>
-              <li>• File validation</li>
-              <li>• State management</li>
-              <li>• Error handling</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* AI/ML Layer */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <div className="w-4 h-4 bg-green-500 rounded mr-3"></div>
-          AI/ML Layer
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
-            <h3 className="font-bold text-green-700 mb-2">🧠 TensorFlow.js Model</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Pre-trained CNN model</li>
-              <li>• Client-side inference</li>
-              <li>• 224x224 input processing</li>
-              <li>• 3-class classification</li>
-              <li>• Confidence scoring</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
-            <h3 className="font-bold text-green-700 mb-2">🔄 Image Processing</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Canvas API integration</li>
-              <li>• Image resizing/cropping</li>
-              <li>• Tensor conversion</li>
-              <li>• Normalization (0-1)</li>
-              <li>• Memory management</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Data Layer */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <div className="w-4 h-4 bg-purple-500 rounded mr-3"></div>
-          Data & Business Logic
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-500">
-            <h3 className="font-bold text-purple-700 mb-2">📊 Color Recommendations</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Static recommendation data</li>
-              <li>• Color palette mappings</li>
-              <li>• Clothing suggestions</li>
-              <li>• Jewelry recommendations</li>
-              <li>• Hex color definitions</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-500">
-            <h3 className="font-bold text-purple-700 mb-2">🎯 Classification Logic</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Light/Medium/Dark tones</li>
-              <li>• Confidence thresholding</li>
-              <li>• Result interpretation</li>
-              <li>• Description mapping</li>
-              <li>• Error fallbacks</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* System Architecture Flow */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <div className="w-4 h-4 bg-orange-500 rounded mr-3"></div>
-          Data Flow Architecture
-        </h2>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">📷</span>
-              </div>
-              <p className="text-sm font-semibold">Image Input</p>
-              <p className="text-xs text-gray-600">Upload/Camera</p>
-            </div>
-            <div className="text-2xl text-gray-400">→</div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">⚙</span>
-              </div>
-              <p className="text-sm font-semibold">Preprocessing</p>
-              <p className="text-xs text-gray-600">Resize/Normalize</p>
-            </div>
-            <div className="text-2xl text-gray-400">→</div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">🧠</span>
-              </div>
-              <p className="text-sm font-semibold">AI Inference</p>
-              <p className="text-xs text-gray-600">TensorFlow.js</p>
-            </div>
-            <div className="text-2xl text-gray-400">→</div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">🎨</span>
-              </div>
-              <p className="text-sm font-semibold">Results</p>
-              <p className="text-xs text-gray-600">Colors/Recommendations</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Technology Stack */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <div className="w-4 h-4 bg-red-500 rounded mr-3"></div>
-          Technology Stack
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-md text-center">
-            <div className="text-3xl mb-2">🌐</div>
-            <h3 className="font-bold text-gray-700 mb-2">Frontend</h3>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>HTML5</li>
-              <li>CSS3</li>
-              <li>JavaScript ES6+</li>
-              <li>Canvas API</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md text-center">
-            <div className="text-3xl mb-2">🤖</div>
-            <h3 className="font-bold text-gray-700 mb-2">AI/ML</h3>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>TensorFlow.js</li>
-              <li>CNN Model</li>
-              <li>Image Classification</li>
-              <li>Client-side ML</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md text-center">
-            <div className="text-3xl mb-2">📱</div>
-            <h3 className="font-bold text-gray-700 mb-2">APIs</h3>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>MediaDevices</li>
-              <li>FileReader</li>
-              <li>Canvas 2D</li>
-              <li>Drag & Drop</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md text-center">
-            <div className="text-3xl mb-2">🚀</div>
-            <h3 className="font-bold text-gray-700 mb-2">Deployment</h3>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>Static Hosting</li>
-              <li>CDN (TF.js)</li>
-              <li>Progressive Web</li>
-              <li>Mobile Ready</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Missing Implementation Issues */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-red-600 mb-4 flex items-center">
-          <div className="w-4 h-4 bg-red-500 rounded mr-3"></div>
-          🚨 Current Implementation Gaps
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-red-50 p-4 rounded-lg shadow-md border-l-4 border-red-500">
-            <h3 className="font-bold text-red-700 mb-2">❌ Missing Functions</h3>
-            <ul className="text-sm text-red-700 space-y-1">
-              <li>• updateUploadSectionAfterImage() not defined</li>
-              <li>• Camera modal CSS missing</li>
-              <li>• Model files (model.json) not provided</li>
-              <li>• Error boundary handling incomplete</li>
-              <li>• No fallback for unsupported browsers</li>
-            </ul>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg shadow-md border-l-4 border-yellow-500">
-            <h3 className="font-bold text-yellow-700 mb-2">⚠ Production Concerns</h3>
-            <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• No model version control</li>
-              <li>• Missing offline capability</li>
-              <li>• No user analytics/feedback</li>
-              <li>• Limited error reporting</li>
-              <li>• No A/B testing framework</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Deployment Architecture */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <div className="w-4 h-4 bg-cyan-500 rounded mr-3"></div>
-          Production Deployment Structure
-        </h2>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <span className="text-3xl">🌐</span>
-              </div>
-              <h3 className="font-bold text-gray-700 mb-2">Static Assets</h3>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li>index.html</li>
-                <li>styles.css</li>
-                <li>app.js</li>
-                <li>manifest.json (PWA)</li>
-              </ul>
-            </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <span className="text-3xl">🤖</span>
-              </div>
-              <h3 className="font-bold text-gray-700 mb-2">ML Models</h3>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li>model.json</li>
-                <li>model weights (.bin)</li>
-                <li>metadata.json</li>
-                <li>Version control</li>
-              </ul>
-            </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <span className="text-3xl">📊</span>
-              </div>
-              <h3 className="font-bold text-gray-700 mb-2">Analytics</h3>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li>Usage tracking</li>
-                <li>Error monitoring</li>
-                <li>Performance metrics</li>
-                <li>User feedback</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recommended Hosting Options */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <div className="w-4 h-4 bg-blue-500 rounded mr-3"></div>
-          Recommended Hosting Solutions
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
-            <h3 className="font-bold text-blue-700 mb-2">🚀 Vercel (Recommended)</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Zero-config deployment</li>
-              <li>• Automatic HTTPS</li>
-              <li>• Global CDN</li>
-              <li>• Perfect for static apps</li>
-              <li>• Free tier available</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-orange-500">
-            <h3 className="font-bold text-orange-700 mb-2">⚡ Netlify</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Drag & drop deployment</li>
-              <li>• Form handling</li>
-              <li>• Analytics included</li>
-              <li>• Branch previews</li>
-              <li>• Edge functions</li>
-            </ul>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
-            <h3 className="font-bold text-green-700 mb-2">☁ GitHub Pages</h3>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Free hosting</li>
-              <li>• Direct from repository</li>
-              <li>• Custom domains</li>
-              <li>• CI/CD integration</li>
-              <li>• Version control</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Security & Performance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-            <div className="w-4 h-4 bg-yellow-500 rounded mr-3"></div>
-            Security Features
-          </h2>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <ul className="text-sm text-gray-700 space-y-2">
-              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Client-side processing (no data upload)</li>
-              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>No server-side storage</li>
-              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Camera permission handling</li>
-              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>File type validation</li>
-              <li className="flex items-center"><span className="text-green-500 mr-2">✓</span>Memory cleanup</li>
-              <li className="flex items-center"><span className="text-red-500 mr-2">⚠</span>CSP headers needed</li>
-              <li className="flex items-center"><span className="text-red-500 mr-2">⚠</span>HTTPS enforcement</li>
-            </ul>
-          </div>
-        </div>
-        
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-            <div className="w-4 h-4 bg-indigo-500 rounded mr-3"></div>
-            Performance Optimizations
-          </h2>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <ul className="text-sm text-gray-700 space-y-2">
-              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Lazy model loading</li>
-              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Image resizing optimization</li>
-              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Tensor memory management</li>
-              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Responsive design</li>
-              <li className="flex items-center"><span className="text-blue-500 mr-2">⚡</span>Progressive enhancement</li>
-              <li className="flex items-center"><span className="text-yellow-500 mr-2">⚠</span>Model compression needed</li>
-              <li className="flex items-center"><span className="text-yellow-500 mr-2">⚠</span>Service worker for caching</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Next Steps for Production */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
-          <div className="w-4 h-4 bg-green-500 rounded mr-3"></div>
-          Immediate Action Items
-        </h2>
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg shadow-md">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-bold text-green-700 mb-3">🔧 Fix Implementation</h3>
-              <ul className="text-sm text-gray-700 space-y-2">
-                <li className="flex items-center"><span className="text-red-500 mr-2">1.</span>Add missing updateUploadSectionAfterImage function</li>
-                <li className="flex items-center"><span className="text-red-500 mr-2">2.</span>Complete camera modal CSS styling</li>
-                <li className="flex items-center"><span className="text-red-500 mr-2">3.</span>Create/upload ML model files</li>
-                <li className="flex items-center"><span className="text-red-500 mr-2">4.</span>Add comprehensive error handling</li>
-                <li className="flex items-center"><span className="text-red-500 mr-2">5.</span>Implement fallbacks for old browsers</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold text-blue-700 mb-3">🚀 Production Setup</h3>
-              <ul className="text-sm text-gray-700 space-y-2">
-                <li className="flex items-center"><span className="text-blue-500 mr-2">1.</span>Set up CI/CD pipeline</li>
-                <li className="flex items-center"><span className="text-blue-500 mr-2">2.</span>Add analytics & monitoring</li>
-                <li className="flex items-center"><span className="text-blue-500 mr-2">3.</span>Configure CDN for models</li>
-                <li className="flex items-center"><span className="text-blue-500 mr-2">4.</span>Implement PWA features</li>
-                <li className="flex items-center"><span className="text-blue-500 mr-2">5.</span>Set up domain & SSL</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ArchitectureDiagram;
